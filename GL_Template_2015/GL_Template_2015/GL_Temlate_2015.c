@@ -37,7 +37,7 @@
 HPALETTE hPalette = NULL;
 
 // Application name and instance storeage
-static LPCTSTR lpszAppName = "GL Template";
+static LPCTSTR lpszAppName = "Yaskawas";
 static HINSTANCE hInstance;
 
 // Rotation amounts
@@ -62,6 +62,8 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 
 // Dialog procedure for about box
 BOOL APIENTRY AboutDlgProc(HWND hDlg, UINT message, UINT wParam, LONG lParam);
+
+void RenderScene(void);
 
 // Set Pixel Format function - forward declaration
 void SetDCPixelFormat(HDC hDC);
@@ -124,7 +126,7 @@ void calcNormal(float v[3][3], float out[3])
 // Change viewing volume and viewport.  Called when window is resized
 void ChangeSize(GLsizei w, GLsizei h)
 {
-	GLfloat nRange = 100.0f;
+	GLfloat nRange = 200.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	GLfloat fAspect;
 	// Prevent a divide by zero
 	if (h == 0)
@@ -148,9 +150,9 @@ void ChangeSize(GLsizei w, GLsizei h)
 		glOrtho(-nRange*w / h, nRange*w / h, -nRange, nRange, -nRange, nRange);
 
 	// Establish perspective: 
-	/*
-	gluPerspective(60.0f,fAspect,1.0,400);
-	*/
+	
+	//gluPerspective(40.0f,fAspect, 50.0,50);
+	
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -526,11 +528,11 @@ void ramie(double r1, double r2, double h, double d) {
 int base(int x, int y, int z, int y2) {
 	prostopadloscian(x, y, z);
 
-	float x2 = 0.9 * x;
-	float radius = x2 / 2;
-	float front = 0.05 * z + radius;
+	float x2 = 0.9f * x;
+	float radius = x2 / 2.0f;
+	float front = 0.05f * z + radius;
 	float z2 = z - front;
-	float move_z = (z - z2) / 2;
+	float move_z = (z - z2) / 2.0f;
 	glTranslated(0, y, -move_z);
 	prostopadloscian(x2, y2, z2); //TODO? moze jakies wciecie
 
@@ -566,13 +568,13 @@ void picker(float r, float h, float h2) {
 	glColor3d(0.0, 0.0, 0.0); //black
 	walec(height_ring, radius_ring);
 }
-void scara(void) {
+void scara(int x_base, int z_base) {
 	glColor3d(0.2, 0.6, 0.9); // light blue
 	glPushMatrix();
 	//base
 	float y2 = 30.0f;
 	float radius1, radius2;
-	radius1 = base(50, 8, 70, y2);
+	radius1 = base(x_base, 8, z_base, y2);
 
 	glTranslated(0, 0, y2);
 	glColor3d(0.0, 0.0, 0.0); //black
@@ -584,7 +586,7 @@ void scara(void) {
 	glColor3d(0.2, 0.6, 0.9); // light blue
 	glTranslated(0, 0, h_walca);
 	glRotated(scara_rot_1, 0, 0, 1);
-	float y3 = 7.0f, d1 = 50.0f;
+	float y3 = 7.0f, d1 = 0.71f * z_base;
 	radius2 = radius1 * 0.7f;
 	ramie(radius1, radius2, y3, d1);
 
@@ -716,15 +718,29 @@ void scara(void) {
 	// picker
 	float picker_h = 90.0f; //TODO overall height
 	picker(radius3, picker_h, y5);
-
-	
-
-
-
 	glPopMatrix();
 }
 
+void conveyor(float w, float h, float l) {
 
+	glColor3d(0.7, 0.7, 0.7); //grey
+	glPushMatrix();
+		glRotated(90, 1, 0, 0);
+		prostopadloscian(l, w, h);
+	glPopMatrix();
+	
+	glPushMatrix();
+		glTranslated(-l / 2.0f, 0, 0); // x axis was towards left
+		glRotated(-90, 0, 0, 1);
+		semicircleZ(h / 2.0f, w);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslated(l / 2.0f, 0, 0);
+		glRotated(90, 0, 0, 1);
+		semicircleZ(h / 2.0f, w);
+	glPopMatrix();
+}
 // LoadBitmapFile
 // opis: �aduje map� bitow� z pliku i zwraca jej adres.
 //       Wype�nia struktur� nag��wka.
@@ -819,7 +835,28 @@ void RenderScene(void)
 	//Wyrysowanie prostokata:
 	//glRectd(-10.0, -10.0, 20.0, 20.0);
 	
-	scara();
+
+	// init point
+	glPushMatrix();
+		float conveyor_wid = 50.0f;
+		float conveyor_len = 200.0f;
+		float conveyor_h = 15.0f;
+		int x_base = 50, z_base = 70;
+		float scara_z = -(conveyor_wid + z_base * 0.5f);
+		
+
+		float picker_z = -conveyor_wid - 0.05f * (float)z_base - 0.9f * 0.5f * (float)x_base + 0.71 * (float)z_base * 1.8f + 0.5f * 0.65f * 0.7f * 0.5f * 0.9f * (float)x_base;
+		glTranslated(conveyor_len / 3.0f, 0, scara_z - abs(picker_z + conveyor_wid * 0.5f));
+		
+		scara(x_base, z_base);
+	glPopMatrix();
+
+
+	glPushMatrix();
+		glTranslated(conveyor_len / 2.0f, conveyor_h / 2.0f, 0);
+		glRotated(180, 0, 1, 0);
+		conveyor(conveyor_wid, conveyor_h, conveyor_len);
+	glPopMatrix();
 
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -980,7 +1017,7 @@ int APIENTRY WinMain(HINSTANCE       hInst,
 
 		// Window position and size
 		50, 50,
-		400, 400,
+		700, 700,
 		NULL,
 		NULL,
 		hInstance,
