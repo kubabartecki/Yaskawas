@@ -543,18 +543,28 @@ int base(int x, int y, int z, int y2) {
 
 float scara_rot_1 = -90.0f, scara_rot_2 = 0.0f, scara_pick = 0.0f;
 
-void picker(float r, float h) {
-	glTranslated(0, r * 0.5f, h * 0.5f + scara_pick);
+void picker(float r, float h, float h2) {
+	float init_h = h2 / 2.0f + h * 0.5f + scara_pick;
+	glTranslated(0, r * 0.5f, 0);
 	glRotated(180, 1, 0, 0);
+
+	glPushMatrix();
+
+	glTranslated(0, 0, -init_h);
 	glColor3d(0.0, 0.0, 0.0); //black
 	float radius_ring = r * 0.9f * 0.5f;
 	float height_ring = h * 0.05f;
 	float radius_picker = radius_ring * 0.5f;
 	walec(height_ring, radius_ring);
-	glTranslated(0, 0, height_ring);
-	
+
+	glTranslated(0, 0, height_ring);	
 	glColor3d(0.7, 0.7, 0.7); //grey
 	walec(h - height_ring, radius_picker);
+
+	glPopMatrix();
+	glTranslated(0, 0, h2 - scara_pick);
+	glColor3d(0.0, 0.0, 0.0); //black
+	walec(height_ring, radius_ring);
 }
 void scara(void) {
 	glColor3d(0.2, 0.6, 0.9); // light blue
@@ -705,7 +715,7 @@ void scara(void) {
 
 	// picker
 	float picker_h = 90.0f; //TODO overall height
-	picker(radius3, picker_h);
+	picker(radius3, picker_h, y5);
 
 	
 
