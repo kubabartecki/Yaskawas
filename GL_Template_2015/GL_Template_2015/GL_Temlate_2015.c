@@ -720,7 +720,9 @@ void scara(int x_base, int z_base) {
 	picker(radius3, picker_h, y5);
 	glPopMatrix();
 }
-
+float conv_time = 3.0f; // okres ruchu klocka o 1 pozycje na tasmie
+float cube_move = 0.0f; // ruch klocka na tasmie
+// zakladam ze sa 4 pozycje na tasmie i scara zabbiera klocek z 3 pozycji i odklada do pudla
 void conveyor(float w, float h, float l) {
 
 	glColor3d(0.7, 0.7, 0.7); //grey
@@ -740,6 +742,15 @@ void conveyor(float w, float h, float l) {
 		glRotated(90, 0, 0, 1);
 		semicircleZ(h / 2.0f, w);
 	glPopMatrix();
+
+	float cube_side = w / 5.0f;
+	glTranslated(0, h / 2.0f, w / 2.0f);
+	glColor3d(0.0, 0.0, 0.0); //black
+	prostopadloscian(cube_side, cube_side, cube_side);
+	glTranslated(-l / 4.0f, 0, 0); ////edit
+	prostopadloscian(cube_side, cube_side, cube_side);
+	glTranslated(-l / 4.0f + cube_side / 2.0f, 0, 0);
+	prostopadloscian(cube_side, cube_side, cube_side);
 }
 // LoadBitmapFile
 // opis: �aduje map� bitow� z pliku i zwraca jej adres.
@@ -844,7 +855,7 @@ void RenderScene(void)
 		int x_base = 50, z_base = 70;
 		float scara_z = -(conveyor_wid + z_base * 0.5f);
 		
-
+		// wąwóz tybetyjski
 		float picker_z = -conveyor_wid - 0.05f * (float)z_base - 0.9f * 0.5f * (float)x_base + 0.71 * (float)z_base * 1.8f + 0.5f * 0.65f * 0.7f * 0.5f * 0.9f * (float)x_base;
 		glTranslated(conveyor_len / 3.0f, 0, scara_z - abs(picker_z + conveyor_wid * 0.5f));
 		
@@ -1056,8 +1067,18 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 
 	switch (message)
 	{
+	case WM_TIMER:
+		if (wParam == 101)
+		{
+			
+			InvalidateRect(hWnd, NULL, FALSE);
+		}
+		break;
 		// Window creation, setup for OpenGL
 	case WM_CREATE:
+		//timer
+		SetTimer(hWnd, 101, 200, NULL);
+
 		// Store the device context
 		hDC = GetDC(hWnd);
 
@@ -1114,6 +1135,9 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 
 		// Window is being destroyed, cleanup
 	case WM_DESTROY:
+		//timer
+		KillTimer(hWnd, 101);
+
 		// Deselect the current rendering context and delete it
 		wglMakeCurrent(hDC, NULL);
 		wglDeleteContext(hRC);
