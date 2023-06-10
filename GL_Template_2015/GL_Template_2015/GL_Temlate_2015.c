@@ -370,6 +370,50 @@ void prostopadloscian(float x, float y, float z) {
 	glEnd();
 }
 
+void box(float x, float y, float z) {
+	//toward Y axis
+	//TODO walls inside
+	glDisable(GL_CULL_FACE);
+
+	glBegin(GL_QUADS);
+
+	x /= 2;
+	z /= 2;
+
+	glNormal3d(0, 0, 1);
+	glVertex3d(x, y, z);
+	glVertex3d(-x, y, z);
+	glVertex3d(-x, 0, z);
+	glVertex3d(x, 0, z);
+
+
+	glNormal3d(1, 0, 0);
+	glVertex3d(x, y, z);
+	glVertex3d(x, 0, z);
+	glVertex3d(x, 0, -z);
+	glVertex3d(x, y, -z);
+
+	glNormal3d(0, 0, -1);
+	glVertex3d(x, y, -z);
+	glVertex3d(x, 0, -z);
+	glVertex3d(-x, 0, -z);
+	glVertex3d(-x, y, -z);
+
+	glNormal3d(-1, 0, 0);
+	glVertex3d(-x, y, -z);
+	glVertex3d(-x, 0, -z);
+	glVertex3d(-x, 0, z);
+	glVertex3d(-x, y, z);
+
+	glNormal3d(0, -1, 0);
+	glVertex3d(x, 0, z);
+	glVertex3d(-x, 0, z);
+	glVertex3d(-x, 0, -z);
+	glVertex3d(x, 0, -z);
+	glEnd();
+	glEnable(GL_CULL_FACE);
+}
+
 void semicircleZ(float r, float h) {
 	//toward Z axis
 
@@ -543,10 +587,12 @@ int base(int x, int y, int z, int y2) {
 	return radius;
 }
 
-float scara_rot_1 = -90.0f, scara_rot_2 = 0.0f, scara_pick = 0.0f;
+float scara_rot_1 = -90.0f, scara_rot_2 = 0.0f, scara_picker = 0.0f;
+int ScaraPicked = 1;
+float SCARA_PICKER_DISTANCE = 12.0f;
 
-void picker(float r, float h, float h2) {
-	float init_h = h2 / 2.0f + h * 0.5f + scara_pick;
+void picker(float r, float h, float h2, float cube_side) {
+	float init_h = h2 / 2.0f + h * 0.5f + scara_picker - 3.0f;
 	glTranslated(0, r * 0.5f, 0);
 	glRotated(180, 1, 0, 0);
 
@@ -559,16 +605,26 @@ void picker(float r, float h, float h2) {
 	float radius_picker = radius_ring * 0.5f;
 	walec(height_ring, radius_ring);
 
-	glTranslated(0, 0, height_ring);	
+	glTranslated(0, 0, height_ring);
 	glColor3d(0.7, 0.7, 0.7); //grey
 	walec(h - height_ring, radius_picker);
+	if (ScaraPicked) {
+		glColor3d(0.0, 0.0, 0.0); //black
+		glPushMatrix();
+			glTranslated(0, 0, h - height_ring);
+			glRotated(90, 1, 0, 0);
+			prostopadloscian(cube_side, cube_side, cube_side);
+		glPopMatrix();
+	}
+
 
 	glPopMatrix();
-	glTranslated(0, 0, h2 - scara_pick);
+	glTranslated(0, 0, h2);
 	glColor3d(0.0, 0.0, 0.0); //black
 	walec(height_ring, radius_ring);
+	
 }
-void scara(int x_base, int z_base) {
+void scara(int x_base, int z_base, float cube_side) {
 	glColor3d(0.2, 0.6, 0.9); // light blue
 	glPushMatrix();
 	//base
@@ -717,13 +773,14 @@ void scara(int x_base, int z_base) {
 
 	// picker
 	float picker_h = 90.0f; //TODO overall height
-	picker(radius3, picker_h, y5);
+	picker(radius3, picker_h, y5, cube_side);
 	glPopMatrix();
 }
-float conv_time = 3.0f; // okres ruchu klocka o 1 pozycje na tasmie
+float CONV_TIME = 5.0f; // okres ruchu klocka o 1 pozycje na tasmie
+float scara_time = 0.0f; // to samo wsm tylko zmienne
 float cube_move = 0.0f; // ruch klocka na tasmie
 // zakladam ze sa 4 pozycje na tasmie i scara zabbiera klocek z 3 pozycji i odklada do pudla
-void conveyor(float w, float h, float l) {
+float conveyor(float w, float h, float l) {
 
 	glColor3d(0.7, 0.7, 0.7); //grey
 	glPushMatrix();
@@ -744,13 +801,15 @@ void conveyor(float w, float h, float l) {
 	glPopMatrix();
 
 	float cube_side = w / 5.0f;
-	glTranslated(0, h / 2.0f, w / 2.0f);
+	glTranslated(cube_move, h / 2.0f, w / 2.0f);
 	glColor3d(0.0, 0.0, 0.0); //black
 	prostopadloscian(cube_side, cube_side, cube_side);
-	glTranslated(-l / 4.0f, 0, 0); ////edit
+	glTranslated(-l / 4.0f, 0, 0);
 	prostopadloscian(cube_side, cube_side, cube_side);
-	glTranslated(-l / 4.0f + cube_side / 2.0f, 0, 0);
+	glTranslated(-l / 4.0f, 0, 0);
 	prostopadloscian(cube_side, cube_side, cube_side);
+
+	return cube_side;
 }
 // LoadBitmapFile
 // opis: �aduje map� bitow� z pliku i zwraca jej adres.
@@ -819,7 +878,7 @@ unsigned char *LoadBitmapFile(char *filename, BITMAPINFOHEADER *bitmapInfoHeader
 	return bitmapImage;
 }
 
-
+float conveyor_len = 200.0f;
 // Called to draw scene
 void RenderScene(void)
 {
@@ -846,27 +905,35 @@ void RenderScene(void)
 	//Wyrysowanie prostokata:
 	//glRectd(-10.0, -10.0, 20.0, 20.0);
 	
-
+	float conveyor_wid = 50.0f;
+	conveyor_len = 200.0f;
+	float conveyor_h = 15.0f;
+	int x_base = 50, z_base = 70;
+	float scara_z = -(conveyor_wid + z_base * 0.5f);
+	float cube_side;
 	// init point
-	glPushMatrix();
-		float conveyor_wid = 50.0f;
-		float conveyor_len = 200.0f;
-		float conveyor_h = 15.0f;
-		int x_base = 50, z_base = 70;
-		float scara_z = -(conveyor_wid + z_base * 0.5f);
-		
-		// wąwóz tybetyjski
-		float picker_z = -conveyor_wid - 0.05f * (float)z_base - 0.9f * 0.5f * (float)x_base + 0.71 * (float)z_base * 1.8f + 0.5f * 0.65f * 0.7f * 0.5f * 0.9f * (float)x_base;
-		glTranslated(conveyor_len / 3.0f, 0, scara_z - abs(picker_z + conveyor_wid * 0.5f));
-		
-		scara(x_base, z_base);
-	glPopMatrix();
-
-
 	glPushMatrix();
 		glTranslated(conveyor_len / 2.0f, conveyor_h / 2.0f, 0);
 		glRotated(180, 0, 1, 0);
-		conveyor(conveyor_wid, conveyor_h, conveyor_len);
+		cube_side = conveyor(conveyor_wid, conveyor_h, conveyor_len);
+	glPopMatrix();
+
+	glPushMatrix();
+		// wąwóz tybetyjski																								  |do tad 2 ramiona
+		float picker_z = -conveyor_wid - 0.05f * (float)z_base - 0.9f * 0.5f * (float)x_base + 0.71 * (float)z_base * 1.8f + 0.5f * 0.65f * 0.7f * 0.5f * 0.9f * (float)x_base;
+		glTranslated(conveyor_len / 4.0f, 0, scara_z - abs(picker_z + conveyor_wid * 0.5f));
+		scara(x_base, z_base, cube_side);
+	glPopMatrix();
+
+	//box
+	int CUBES_IN_BOX = 3;
+	float box_side_x = 0.8f * x_base;
+	float box_side_z = 0.8f * z_base;
+	float box_side_y = 20.0f;
+	glPushMatrix();
+		glTranslated(-x_base / 3, 0, -(conveyor_wid + (float)z_base * 1.5f));
+		glColor3d(0.6, 0.5, 0.3); //brown
+		box(box_side_x, box_side_y, box_side_z);
 	glPopMatrix();
 
 	/////////////////////////////////////////////////////////////////
@@ -1054,7 +1121,8 @@ int APIENTRY WinMain(HINSTANCE       hInst,
 }
 
 
-
+//times ms
+UINT SCARA_ELAPSE = 50;
 
 // Window procedure, handles all messages for this program
 LRESULT CALLBACK WndProc(HWND    hWnd,
@@ -1064,20 +1132,57 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 {
 	static HGLRC hRC;               // Permenant Rendering context
 	static HDC hDC;                 // Private GDI Device context
-
+	float CONV_TIMER_RATIO = SCARA_ELAPSE / (CONV_TIME * 1000.0f);
+	float picker_dist = SCARA_PICKER_DISTANCE * (CONV_TIMER_RATIO / 0.2f);
+	float scara_dist = 80.0f * (CONV_TIMER_RATIO / 0.5f);
 	switch (message)
 	{
 	case WM_TIMER:
 		if (wParam == 101)
 		{
+			if (scara_time >= (CONV_TIME / 2.0f)) {
+				ScaraPicked = 0;
+			}
+
+			if (scara_time < CONV_TIME * 0.2f) {
+				scara_picker += picker_dist; // up 1st time
+			}
+			else if (scara_time < CONV_TIME * 0.5f && scara_time > CONV_TIME * 0.3f) {
+				scara_picker -= picker_dist;// down 1st
+			}
+			else if (scara_time < CONV_TIME * 0.7f && scara_time >= CONV_TIME * 0.5f) { // second condition to protect from move while gap
+				scara_picker += picker_dist;// up 2nd
+			}
+			else if (scara_time < CONV_TIME && scara_time > CONV_TIME * 0.8f) {
+				scara_picker -= picker_dist;// down 2nd
+			}
 			
+			if (scara_time < CONV_TIME * 0.5f) {
+				scara_rot_1 -= scara_dist;
+				scara_rot_2 -= scara_dist;
+			}
+			else {
+				scara_rot_1 += scara_dist;
+				scara_rot_2 += scara_dist;
+			}
+			cube_move += (conveyor_len / 4.0f * CONV_TIMER_RATIO); // * 50ms
+			scara_time += (float)SCARA_ELAPSE / 1000.0f;
+			if (scara_time >= CONV_TIME) {
+				cube_move = 0.0f;
+				scara_time = 0.0f;
+				scara_picker = 0.0f; // sometimes it needs adjustment
+				ScaraPicked = 1; //cube attached to scara
+
+				scara_rot_1 = -90.0f;
+				scara_rot_2 = 0.0f;
+			}
 			InvalidateRect(hWnd, NULL, FALSE);
 		}
 		break;
 		// Window creation, setup for OpenGL
 	case WM_CREATE:
 		//timer
-		SetTimer(hWnd, 101, 200, NULL);
+		SetTimer(hWnd, 101, SCARA_ELAPSE, NULL);
 
 		// Store the device context
 		hDC = GetDC(hWnd);
@@ -1248,10 +1353,10 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 			scara_rot_2 += 5.0f;
 
 		if (wParam == '5')
-			scara_pick -= 5.0f;
+			scara_picker -= 5.0f;
 
 		if (wParam == '6')
-			scara_pick += 5.0f;
+			scara_picker += 5.0f;
 
 		InvalidateRect(hWnd, NULL, FALSE);
 	}
