@@ -833,6 +833,9 @@ float cobot_rot4 = 0.0f;
 float cobot_rot5 = 0.0f;
 float cobot_rot6 = 0.0f;
 
+float cobot_time = 0.0f;
+float COBOT_TIME = 8.0f;
+
 void cobot() {
 	glColor3d(1.0, 0.9, 0.9); //ala walter white
 	float base_x = 50.0f;
@@ -1297,7 +1300,8 @@ int APIENTRY WinMain(HINSTANCE       hInst,
 
 //times ms
 UINT SCARA_ELAPSE = 50;
-
+int Cobot = 0;
+int Scara = 1;
 // Window procedure, handles all messages for this program
 LRESULT CALLBACK WndProc(HWND    hWnd,
 	UINT    message,
@@ -1313,51 +1317,85 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 	{
 	case WM_TIMER:
 		if (wParam == 101)
-		{
-			if (scara_time >= (CONV_TIME / 2.0f) && ScaraPicked) {
-				ScaraPicked = 0;
-				cube_in_box += 1;
-				if (cube_in_box % MAX_CUBES_IN_BOX == 0) {
-					ClosingBox = 1;
+		{	
+			if (Scara) {
+				if (scara_time >= (CONV_TIME / 2.0f) && ScaraPicked) {
+					ScaraPicked = 0;
+					cube_in_box += 1;
+					if (cube_in_box % MAX_CUBES_IN_BOX == 0) {
+						ClosingBox = 1;
+					}
+				}
+
+				if (scara_time < CONV_TIME * 0.2f) {
+					scara_picker += picker_dist; // up 1st time
+				}
+				else if (scara_time < CONV_TIME * 0.5f && scara_time > CONV_TIME * 0.3f) {
+					scara_picker -= picker_dist;// down 1st
+				}
+				else if (scara_time < CONV_TIME * 0.7f && scara_time >= CONV_TIME * 0.5f) { // second condition to protect from move while gap
+					scara_picker += picker_dist;// up 2nd
+				}
+				else if (scara_time < CONV_TIME && scara_time > CONV_TIME * 0.8f) {
+					scara_picker -= picker_dist;// down 2nd
+				}
+
+				if (scara_time < CONV_TIME * 0.5f) {
+					scara_rot_1 -= scara_dist;
+					scara_rot_2 -= scara_dist;
+				}
+				else {
+					scara_rot_1 += scara_dist;
+					scara_rot_2 += scara_dist;
+				}
+
+				if (scara_time >= CONV_TIME) {
+					cube_move = 0.0f;
+					scara_time = 0.0f;
+					scara_picker = 0.0f; // sometimes it needs adjustment
+					ScaraPicked = 1; //cube attached to scara
+
+					scara_rot_1 = -90.0f;
+					scara_rot_2 = 0.0f;
+
+					if (ClosingBox) {
+						Scara = 0;
+						Cobot = 1;
+					}
 				}
 			}
 
-			if (scara_time < CONV_TIME * 0.2f) {
-				scara_picker += picker_dist; // up 1st time
+			// cobot
+			if (ClosedBox) {
+				Scara = 1;
+				ClosingBox = 0;
+				ClosedBox = 0;
+				cube_in_box = 0;
 			}
-			else if (scara_time < CONV_TIME * 0.5f && scara_time > CONV_TIME * 0.3f) {
-				scara_picker -= picker_dist;// down 1st
-			}
-			else if (scara_time < CONV_TIME * 0.7f && scara_time >= CONV_TIME * 0.5f) { // second condition to protect from move while gap
-				scara_picker += picker_dist;// up 2nd
-			}
-			else if (scara_time < CONV_TIME && scara_time > CONV_TIME * 0.8f) {
-				scara_picker -= picker_dist;// down 2nd
+			if (Cobot) {
+				if (cobot_time >= COBOT_TIME) {
+					cobot_time = 0.0f;
+					Cobot = 0;
+				}
+
+				else if (cobot_time >= COBOT_TIME / 2.0f) {
+					ClosedBox = 1;
+				}
 			}
 			
-			if (scara_time < CONV_TIME * 0.5f) {
-				scara_rot_1 -= scara_dist;
-				scara_rot_2 -= scara_dist;
-			}
-			else {
-				scara_rot_1 += scara_dist;
-				scara_rot_2 += scara_dist;
-			}
-			cube_move += (conveyor_len / 4.0f * CONV_TIMER_RATIO); // * 50ms
-			scara_time += (float)SCARA_ELAPSE / 1000.0f;
-			if (scara_time >= CONV_TIME) {
-				cube_move = 0.0f;
-				scara_time = 0.0f;
-				scara_picker = 0.0f; // sometimes it needs adjustment
-				ScaraPicked = 1; //cube attached to scara
+			
+			
+			
 
-				scara_rot_1 = -90.0f;
-				scara_rot_2 = 0.0f;
-
-				if (ClosedBox) {
-					cube_in_box = 0;
-				}
+			if (Scara) {
+				cube_move += (conveyor_len / 4.0f * CONV_TIMER_RATIO); // * 50ms
+				scara_time += (float)SCARA_ELAPSE / 1000.0f;
 			}
+
+			if (Cobot) {
+				cobot_time += (float)SCARA_ELAPSE / 1000.0f;
+			}
+
 			InvalidateRect(hWnd, NULL, FALSE);
 		}
 		break;
