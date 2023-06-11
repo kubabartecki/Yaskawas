@@ -852,7 +852,7 @@ void cobot() {
 		gluCylinder(obj, base_x / 2.0f, base_x2 / 2.0f , base_y2, 15, 7);
 
 		glTranslated(0, 0, base_y2);
-		glRotated(cobot_rot1, 0, 1, 0); // 1 rot todo spr
+		glRotated(cobot_rot1, 0, 0, 1); // 1 rot
 		walec(base_y2, base_x2 / 2.0f);
 
 		glTranslated(0, 0, base_y2);
@@ -860,16 +860,98 @@ void cobot() {
 		gluSphere(obj, base_x2 / 2.0f, 15, 7);
 
 		
-		glTranslated(-base_x2 / 2.0f, 0, -base_y2 / 2.0f);
+		glTranslated(0, 0, -base_y2 / 2.0f);
 		glRotated(-90, 0, 1, 0);
-		glRotated(-cobot_rot2, 0, 0, 1); // 2 rot todo spr
-		float h3 = base_y2 * 1.8f;
-		float r3 = base_x2 / 2.0f; 
+		glRotated(-cobot_rot2, 0, 0, 1); // 2 rot
+		float h3 = base_y2 * 2.5f;
+		float r3 = base_x2 / 2.3f; 
 		glColor3d(1.0, 0.9, 0.9); //ala walter white
 		walec(h3, r3);
 		glTranslated(0, 0, h3);
 		glColor3d(0.2, 0.6, 0.9); // light blue
 		gluSphere(obj, r3, 15, 7);
+
+		glTranslated(0, 0, -h3 * 0.4f);
+		glRotated(90, 0, 1, 0);
+		float r4 = r3 * 0.8f;
+		float h4 = base_y2 * 7.0f;
+		glColor3d(1.0, 0.9, 0.9); //ala walter white
+		gluCylinder(obj, r3, r4, h4, 15, 7);
+		glTranslated(-r4 * 1.5f, 0, h4);
+		glRotated(-90, 0, 1, 0);
+		glColor3d(0.2, 0.6, 0.9); // light blue
+		gluSphere(obj, r4, 15, 7);
+		glRotated(180, 0, 1, 0);
+		glColor3d(1.0, 0.9, 0.9); //ala walter white
+		float h5 = h3;
+		float r5 = r4;
+		walec(h5, r5);
+
+		glTranslated(0, 0, h5);
+		glRotated(-cobot_rot3, 0, 0, 1); //3 rot todo spr
+		float h6 = h5 / 2.0f; // h6 is just for rotation
+		float r6 = r5;
+		walec(h6, r6);
+		glTranslated(0, 0, h6);
+		glColor3d(0.2, 0.6, 0.9); // light blue
+		gluSphere(obj, r6, 15, 7);
+
+		float h7 = h4 * 0.7f;
+		float r7 = r6;
+		float r8 = 0.75f * r7;
+		glTranslated(0, 0, -h6 / 2.0f);
+		glRotated(90, 0, 1, 0);
+		glRotated(-cobot_rot4, 0, 0, 1); // 4 rot todo spr
+		glColor3d(1.0, 0.9, 0.9); // ala walter white
+		gluCylinder(obj, r7, r8, h7, 15, 7);
+
+		float h8 = h6 * 0.8f;
+		glTranslated(0, 0, h7);
+		glRotated(90, 0, 1, 0);
+		glTranslated(0, 0, h8 / 2.0f);
+		glColor3d(0.2, 0.6, 0.9); // light blue
+		gluSphere(obj, r8, 15, 7);
+		glRotated(180, 0, 1, 0);
+		glColor3d(1.0, 0.9, 0.9); //ala walter white
+		walec(h8, r8);
+
+		glTranslated(0, 0, h8);
+		glRotated(-cobot_rot5, 0, 0, 1); //5 rot spr
+		float h9 = h8 / 2.0f;
+		float r9 = r8;
+		walec(h9, r9);
+		float h10 = h8;
+		float r10 = r8;
+		glTranslated(-h10 / 2.0f, 0, h9 + r10 / 2.0f);
+		glRotated(-90, 0, 1, 0);
+		glColor3d(0.2, 0.6, 0.9); // light blue
+		gluSphere(obj, r10, 15, 7);
+		glRotated(180, 0, 1, 0);
+		glColor3d(1.0, 0.9, 0.9); //ala walter white
+		walec(h10, r10);
+		glTranslated(0, 0, h10);
+		
+		float h11 = h10 / 2.0f;
+		float r11 = r10 * 0.8f;
+		gluCylinder(obj, r10, r11, h11, 15, 7);
+		glTranslated(0, 0, h11);
+		glRotated(cobot_rot6, 0, 0, 1); //6 rot spr
+
+		float h12 = h11 * 0.5f;
+		float r12 = r11;
+		glColor3d(0.7, 0.7, 0.7); //grey
+		walec(h12, r12);
+
+		//przyssawka
+		glTranslated(0, 0, h12);
+
+		float h13 = h12 * 0.6f;
+		float x13 = r12 * 2.0f;
+		float z13 = r12 * 3.0f;
+		glColor3d(0, 0, 0); // black
+		glRotated(90, 1, 0, 0);
+		prostopadloscian(x13, h13, z13);
+
 
 	glPopMatrix();
 
@@ -1457,6 +1539,43 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 
 		if (wParam == '6')
 			scara_picker += 5.0f;
+
+		//cobot
+		if (wParam == VkKeyScanA('q'))
+			cobot_rot1 += 5.0f;
+
+		if (wParam == VkKeyScanA('w'))
+			cobot_rot2 += 5.0f;
+
+		if (wParam == VkKeyScanA('e'))
+			cobot_rot3 += 5.0f;
+
+		if (wParam == VkKeyScanA('r'))
+			cobot_rot4 += 5.0f;
+
+		if (wParam == VkKeyScanA('t'))
+			cobot_rot5 += 5.0f;
+
+		if (wParam == VkKeyScanA('y'))
+			cobot_rot6 += 5.0f;
+
+		if (wParam == VkKeyScanA('a'))
+			cobot_rot1 -= 5.0f;
+
+		if (wParam == VkKeyScanA('s'))
+			cobot_rot2 -= 5.0f;
+
+		if (wParam == VkKeyScanA('d'))
+			cobot_rot3 -= 5.0f;
+
+		if (wParam == VkKeyScanA('f'))
+			cobot_rot4 -= 5.0f;
+
+		if (wParam == VkKeyScanA('g'))
+			cobot_rot5 -= 5.0f;
+
+		if (wParam == VkKeyScanA('h'))
+			cobot_rot6 -= 5.0f;
 
 		InvalidateRect(hWnd, NULL, FALSE);
 	}
