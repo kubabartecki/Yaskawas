@@ -126,7 +126,7 @@ void calcNormal(float v[3][3], float out[3])
 // Change viewing volume and viewport.  Called when window is resized
 void ChangeSize(GLsizei w, GLsizei h)
 {
-	GLfloat nRange = 200.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	GLfloat nRange = 300.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	GLfloat fAspect;
 	// Prevent a divide by zero
 	if (h == 0)
@@ -412,6 +412,20 @@ void box(float x, float y, float z) {
 	glVertex3d(x, 0, -z);
 	glEnd();
 	glEnable(GL_CULL_FACE);
+}
+
+void box_top(float x, float z) {
+	glBegin(GL_QUADS);
+	//todo obie sciany w kolorze
+	x /= 2;
+	z /= 2;
+
+	glNormal3d(0, 1, 0);
+	glVertex3d(x, 0, z);
+	glVertex3d(x, 0, -z);
+	glVertex3d(-x, 0, -z);
+	glVertex3d(-x, 0, z);
+	glEnd();
 }
 
 void semicircleZ(float r, float h) {
@@ -811,6 +825,55 @@ float conveyor(float w, float h, float l) {
 
 	return cube_side;
 }
+
+float cobot_rot1 = 0.0f;
+float cobot_rot2 = 0.0f;
+float cobot_rot3 = 0.0f;
+float cobot_rot4 = 0.0f;
+float cobot_rot5 = 0.0f;
+float cobot_rot6 = 0.0f;
+
+void cobot() {
+	glColor3d(1.0, 0.9, 0.9); //ala walter white
+	float base_x = 50.0f;
+	float base_z = 50.0f;
+	float base_y = 5.0f;
+	prostopadloscian(base_x, base_y, base_z);
+	
+	GLUquadricObj* obj;
+	obj = gluNewQuadric();
+	gluQuadricNormals(obj, GLU_SMOOTH);
+	glPushMatrix();
+		glTranslated(0, base_y, 0);
+		glRotated(-90, 1, 0, 0);
+
+		float base_x2 = base_x * 0.85f;
+		float base_y2 = base_y * 5;
+		gluCylinder(obj, base_x / 2.0f, base_x2 / 2.0f , base_y2, 15, 7);
+
+		glTranslated(0, 0, base_y2);
+		glRotated(cobot_rot1, 0, 1, 0); // 1 rot todo spr
+		walec(base_y2, base_x2 / 2.0f);
+
+		glTranslated(0, 0, base_y2);
+		glColor3d(0.2, 0.6, 0.9); // light blue
+		gluSphere(obj, base_x2 / 2.0f, 15, 7);
+
+		
+		glTranslated(-base_x2 / 2.0f, 0, -base_y2 / 2.0f);
+		glRotated(-90, 0, 1, 0);
+		glRotated(-cobot_rot2, 0, 0, 1); // 2 rot todo spr
+		float h3 = base_y2 * 1.8f;
+		float r3 = base_x2 / 2.0f; 
+		glColor3d(1.0, 0.9, 0.9); //ala walter white
+		walec(h3, r3);
+		glTranslated(0, 0, h3);
+		glColor3d(0.2, 0.6, 0.9); // light blue
+		gluSphere(obj, r3, 15, 7);
+
+	glPopMatrix();
+
+}
 // LoadBitmapFile
 // opis: �aduje map� bitow� z pliku i zwraca jej adres.
 //       Wype�nia struktur� nag��wka.
@@ -879,6 +942,10 @@ unsigned char *LoadBitmapFile(char *filename, BITMAPINFOHEADER *bitmapInfoHeader
 }
 
 float conveyor_len = 200.0f;
+int cube_in_box = 0;
+int MAX_CUBES_IN_BOX = 3;
+int ClosingBox = 0;
+int ClosedBox = 0;
 // Called to draw scene
 void RenderScene(void)
 {
@@ -926,7 +993,6 @@ void RenderScene(void)
 	glPopMatrix();
 
 	//box
-	int CUBES_IN_BOX = 3;
 	float box_side_x = 0.8f * x_base;
 	float box_side_z = 0.8f * z_base;
 	float box_side_y = 20.0f;
@@ -934,7 +1000,33 @@ void RenderScene(void)
 		glTranslated(-x_base / 3, 0, -(conveyor_wid + (float)z_base * 1.5f));
 		glColor3d(0.6, 0.5, 0.3); //brown
 		box(box_side_x, box_side_y, box_side_z);
+		if (cube_in_box == 2) {
+			glTranslated(0, 0, -cube_side / 2.0f);
+		}
+		else if (cube_in_box == 3) {
+			glTranslated(0, 0, -cube_side);
+		}
+		for (int i = 0; i < cube_in_box; ++i) {
+			glColor3d(0.0, 0.0, 0.0); //black
+			prostopadloscian(cube_side, cube_side, cube_side);
+			glTranslated(0, 0, cube_side + 2.0f);
+		}
 	glPopMatrix();
+
+	//// --------- cobot
+	// sheets
+	glColor3d(0.6, 0.5, 0.3); //brown
+	glPushMatrix();
+		glTranslated(-100, 0, -box_side_x / 2.0f); //todo zanik arkuszy
+		for (int i = 0; i < 10; ++i) {
+			box_top(box_side_z, box_side_x);
+			glTranslated(0, 1, 0);
+		}
+	glPopMatrix();
+
+	//robot
+	glTranslated(-150, 0, -200);
+	cobot();
 
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -1140,8 +1232,12 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 	case WM_TIMER:
 		if (wParam == 101)
 		{
-			if (scara_time >= (CONV_TIME / 2.0f)) {
+			if (scara_time >= (CONV_TIME / 2.0f) && ScaraPicked) {
 				ScaraPicked = 0;
+				cube_in_box += 1;
+				if (cube_in_box % MAX_CUBES_IN_BOX == 0) {
+					ClosingBox = 1;
+				}
 			}
 
 			if (scara_time < CONV_TIME * 0.2f) {
@@ -1175,6 +1271,10 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 
 				scara_rot_1 = -90.0f;
 				scara_rot_2 = 0.0f;
+
+				if (ClosedBox) {
+					cube_in_box = 0;
+				}
 			}
 			InvalidateRect(hWnd, NULL, FALSE);
 		}
