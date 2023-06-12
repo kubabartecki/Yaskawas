@@ -336,7 +336,6 @@ void prostopadloscian(float x, float y, float z) {
 	glVertex3d(-x, y, z);
 	glVertex3d(-x, 0, z);
 	glVertex3d(x, 0, z);
-	
 
 	glNormal3d(1, 0, 0);
 	glVertex3d(x, y, z);
@@ -372,60 +371,33 @@ void prostopadloscian(float x, float y, float z) {
 
 void box(float x, float y, float z) {
 	//toward Y axis
-	//TODO walls inside
-	glDisable(GL_CULL_FACE);
+	float thickness = 1.0f;
 
-	glBegin(GL_QUADS);
+	prostopadloscian(x, thickness, z);
 
-	x /= 2;
-	z /= 2;
+	glPushMatrix();
+		glTranslated(0, y / 2.0f, z / 2.0f);
+		glRotated(-90, 1, 0, 0);
+		prostopadloscian(x, thickness, y);
 
-	glNormal3d(0, 0, 1);
-	glVertex3d(x, y, z);
-	glVertex3d(-x, y, z);
-	glVertex3d(-x, 0, z);
-	glVertex3d(x, 0, z);
+		glTranslated(0, z, 0);
+		glRotated(180, 1, 0, 0);
+		prostopadloscian(x, thickness, y);
+	glPopMatrix();
+	
+	glPushMatrix();
+		glTranslated(x / 2.0f, y / 2.0f, 0);
+		glRotated(-90, 0, 0, 1);
+		prostopadloscian(y, thickness, z);
 
-
-	glNormal3d(1, 0, 0);
-	glVertex3d(x, y, z);
-	glVertex3d(x, 0, z);
-	glVertex3d(x, 0, -z);
-	glVertex3d(x, y, -z);
-
-	glNormal3d(0, 0, -1);
-	glVertex3d(x, y, -z);
-	glVertex3d(x, 0, -z);
-	glVertex3d(-x, 0, -z);
-	glVertex3d(-x, y, -z);
-
-	glNormal3d(-1, 0, 0);
-	glVertex3d(-x, y, -z);
-	glVertex3d(-x, 0, -z);
-	glVertex3d(-x, 0, z);
-	glVertex3d(-x, y, z);
-
-	glNormal3d(0, -1, 0);
-	glVertex3d(x, 0, z);
-	glVertex3d(-x, 0, z);
-	glVertex3d(-x, 0, -z);
-	glVertex3d(x, 0, -z);
-	glEnd();
-	glEnable(GL_CULL_FACE);
+		glTranslated(0, -x, 0);
+		glRotated(180, 1, 0, 0);
+		prostopadloscian(y, thickness, z);
+	glPopMatrix();
 }
 
 void box_top(float x, float z) {
-	glBegin(GL_QUADS);
-	//todo obie sciany w kolorze
-	x /= 2;
-	z /= 2;
-
-	glNormal3d(0, 1, 0);
-	glVertex3d(x, 0, z);
-	glVertex3d(x, 0, -z);
-	glVertex3d(-x, 0, -z);
-	glVertex3d(-x, 0, z);
-	glEnd();
+	prostopadloscian(x, 1.0f, z);
 }
 
 void semicircleZ(float r, float h) {
@@ -835,8 +807,10 @@ float cobot_rot6 = 0.0f;
 
 float cobot_time = 0.0f;
 float COBOT_TIME = 8.0f;
+int PickedTop = 0;
+int PickedBox = 0;
 
-void cobot() {
+void cobot(float box_side_x, float box_side_y, float box_side_z) {
 	glColor3d(1.0, 0.9, 0.9); //ala walter white
 	float base_x = 50.0f;
 	float base_z = 50.0f;
@@ -955,6 +929,11 @@ void cobot() {
 		glRotated(90, 1, 0, 0);
 		prostopadloscian(x13, h13, z13);
 
+		if (PickedTop) {
+			glTranslated(0, h13, 0);
+			glColor3d(0.6, 0.5, 0.3); //brown
+			box_top(box_side_x, box_side_z);
+		}
 
 	glPopMatrix();
 
@@ -1028,7 +1007,7 @@ unsigned char *LoadBitmapFile(char *filename, BITMAPINFOHEADER *bitmapInfoHeader
 
 float conveyor_len = 200.0f;
 int cube_in_box = 0;
-int MAX_CUBES_IN_BOX = 3;
+int MAX_CUBES_IN_BOX = 1;
 int ClosingBox = 0;
 int ClosedBox = 0;
 // Called to draw scene
@@ -1103,6 +1082,7 @@ void RenderScene(void)
 	glColor3d(0.6, 0.5, 0.3); //brown
 	glPushMatrix();
 		glTranslated(-100, 0, -box_side_x / 2.0f); //todo zanik arkuszy
+		glRotated(90, 0, 1, 0);
 		for (int i = 0; i < 10; ++i) {
 			box_top(box_side_z, box_side_x);
 			glTranslated(0, 1, 0);
@@ -1111,7 +1091,7 @@ void RenderScene(void)
 
 	//robot
 	glTranslated(-150, 0, -200);
-	cobot();
+	cobot(box_side_x, box_side_y, box_side_z);
 
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -1310,14 +1290,41 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 {
 	static HGLRC hRC;               // Permenant Rendering context
 	static HDC hDC;                 // Private GDI Device context
+
+	////distances per 50ms
+	//scara
 	float CONV_TIMER_RATIO = SCARA_ELAPSE / (CONV_TIME * 1000.0f);
 	float picker_dist = SCARA_PICKER_DISTANCE * (CONV_TIMER_RATIO / 0.2f);
 	float scara_dist = 80.0f * (CONV_TIMER_RATIO / 0.5f);
+	
+	//cobot
+	float COBOT_TIMER_RATIO = SCARA_ELAPSE / (COBOT_TIME * 1000.0f);
+	// 1
+	// w 75 e 50 g 25 
+	float cobot_dist_1w = 48.0f * (COBOT_TIMER_RATIO * 6.0f); //		1/6 of peroid
+	float cobot_dist_1e = 70.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_1t = 20.0f * (COBOT_TIMER_RATIO * 6.0f);
+
+	float cobot_dist_2q = 50.0f * (COBOT_TIMER_RATIO * 6.0f); //		above scara
+	float cobot_dist_2w = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_2e = 30.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_2r = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_2t = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_2y = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+
+	float cobot_dist_3q = 30.0f * (COBOT_TIMER_RATIO * 6.0f); //		to the box
+	float cobot_dist_3w = 30.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3e = 40.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3r = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3t = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3y = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+
 	switch (message)
 	{
 	case WM_TIMER:
 		if (wParam == 101)
 		{	
+			
 			if (Scara) {
 				if (scara_time >= (CONV_TIME / 2.0f) && ScaraPicked) {
 					ScaraPicked = 0;
@@ -1378,8 +1385,46 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 					Cobot = 0;
 				}
 
-				else if (cobot_time >= COBOT_TIME / 2.0f) {
-					ClosedBox = 1;
+				else if (cobot_time >= COBOT_TIME) {
+				
+
+				}
+				else if (cobot_time >= COBOT_TIME / 2.0f) {		// picked box
+					if (!ClosedBox) {
+						ClosedBox = 1;
+					}
+					if (PickedTop) {
+						PickedTop = 0;
+					}
+					if (!PickedBox) {
+						PickedBox = 1;
+					}
+					
+				}
+				else if (cobot_time >= COBOT_TIME / 3.0f) {		// above scara
+					cobot_rot1 += cobot_dist_3q;
+					cobot_rot2 += cobot_dist_3w;
+					cobot_rot3 -= cobot_dist_3e;
+					cobot_rot4 += cobot_dist_3r;
+					cobot_rot5 += cobot_dist_3t;
+					cobot_rot6 += cobot_dist_3y;
+				}
+				else if (cobot_time >= COBOT_TIME / 6.0f) {		//picked top 
+					if (!PickedTop) {
+						PickedTop = 1;
+					}
+					cobot_rot1 += cobot_dist_2q;
+					cobot_rot2 -= cobot_dist_2w;
+					cobot_rot3 += cobot_dist_2e;
+					cobot_rot4 += cobot_dist_2r;
+					cobot_rot5 += cobot_dist_2t;
+					cobot_rot6 += cobot_dist_2y;
+
+				}
+				else if (cobot_time >= 0.0f) {		// go to tops
+					cobot_rot2 += cobot_dist_1w;
+					cobot_rot3 += cobot_dist_1e;
+					cobot_rot5 -= cobot_dist_1t;
 				}
 			}
 			
