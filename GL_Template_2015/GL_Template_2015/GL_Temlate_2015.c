@@ -126,7 +126,7 @@ void calcNormal(float v[3][3], float out[3])
 // Change viewing volume and viewport.  Called when window is resized
 void ChangeSize(GLsizei w, GLsizei h)
 {
-	GLfloat nRange = 300.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	GLfloat nRange = 500.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	GLfloat fAspect;
 	// Prevent a divide by zero
 	if (h == 0)
@@ -938,6 +938,76 @@ void cobot(float box_side_x, float box_side_y, float box_side_z) {
 	glPopMatrix();
 
 }
+
+void factory_floor(float floor_x, float floor_z){
+	glEnable(GL_TEXTURE_2D); // W��cz teksturowanie
+
+	floor_x /= 2.0f;
+	floor_z /= 2.0f;
+	float floor_y = -5.0f;
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	glBegin(GL_QUADS);
+	glNormal3d(0, 1, 0);
+	glTexCoord2d(1.0, 1.0); glVertex3d(floor_x, floor_y, floor_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(floor_x, floor_y, -floor_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(-floor_x, floor_y, -floor_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(-floor_x, floor_y, floor_z);
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D); // Wy��cz teksturowanie
+}
+
+void factory_walls(float wall_x, float wall_y, float wall_z){
+	glEnable(GL_TEXTURE_2D); // W��cz teksturowanie
+
+	wall_x /= 2.0f;
+	wall_z /= 2.0f;
+	float floor_y = -5.0f;
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	/* glBegin(GL_QUADS);
+	glNormal3d(0, -1, 0);
+	glTexCoord2d(1.0, 1.0); glVertex3d(wall_x, wall_y, wall_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(wall_x, wall_y, -wall_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(-wall_x, wall_y, -wall_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(-wall_x, wall_y, wall_z);
+	glEnd();
+	*/ 
+
+	glBegin(GL_QUADS); // back
+	glNormal3d(0, 0, 1);
+	glTexCoord2d(1.0, 1.0); glVertex3d(wall_x, wall_y, -wall_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(-wall_x, wall_y, -wall_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(-wall_x, 0, -wall_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(wall_x, 0, -wall_z);
+	glEnd();
+
+	glBegin(GL_QUADS); // front
+	glNormal3d(0, 0, -1);
+	glTexCoord2d(1.0, 1.0); glVertex3d(-wall_x, wall_y, wall_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(wall_x, wall_y, wall_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(wall_x, 0, wall_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(-wall_x, 0, wall_z);
+	glEnd();
+
+	glBegin(GL_QUADS); // right
+	glNormal3d(-1, 0, 0);
+	glTexCoord2d(1.0, 1.0); glVertex3d(wall_x, wall_y, wall_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(wall_x, wall_y, -wall_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(wall_x, 0, -wall_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(wall_x, 0, wall_z);
+	glEnd();
+
+	glBegin(GL_QUADS); // left
+	glNormal3d(1, 0, 0);
+	glTexCoord2d(1.0, 1.0); glVertex3d(-wall_x, wall_y, wall_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(-wall_x, wall_y, -wall_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(-wall_x, 0, -wall_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(-wall_x, 0, wall_z);
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D); // Wy��cz teksturowanie
+}
+
 // LoadBitmapFile
 // opis: �aduje map� bitow� z pliku i zwraca jej adres.
 //       Wype�nia struktur� nag��wka.
@@ -1035,7 +1105,12 @@ void RenderScene(void)
 
 	//Wyrysowanie prostokata:
 	//glRectd(-10.0, -10.0, 20.0, 20.0);
+	float floor_x = 1000.0f, floor_z = 1000.0f;
+	factory_floor(floor_x, floor_z);
 	
+	float wall_x = 1000.0f, wall_y = 250.0f, wall_z = 1000.0f;
+	factory_walls(wall_x, wall_y, wall_z);
+
 	float conveyor_wid = 50.0f;
 	conveyor_len = 200.0f;
 	float conveyor_h = 15.0f;
@@ -1309,15 +1384,15 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 	float cobot_dist_2w = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
 	float cobot_dist_2e = 30.0f * (COBOT_TIMER_RATIO * 6.0f);
 	float cobot_dist_2r = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
-	float cobot_dist_2t = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
-	float cobot_dist_2y = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_2t = 20.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_2y = 40.0f * (COBOT_TIMER_RATIO * 6.0f);
 
 	float cobot_dist_3q = 30.0f * (COBOT_TIMER_RATIO * 6.0f); //		to the box
-	float cobot_dist_3w = 30.0f * (COBOT_TIMER_RATIO * 6.0f);
-	float cobot_dist_3e = 40.0f * (COBOT_TIMER_RATIO * 6.0f);
-	float cobot_dist_3r = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
-	float cobot_dist_3t = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
-	float cobot_dist_3y = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3w = 42.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3e = 50.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3r = 135.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3t = 10.0f * (COBOT_TIMER_RATIO * 6.0f);
+	float cobot_dist_3y = 45.0f * (COBOT_TIMER_RATIO * 6.0f);
 
 	switch (message)
 	{
@@ -1465,7 +1540,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 		glGenTextures(2, &texture[0]);                  // tworzy obiekt tekstury			
 
 														// �aduje pierwszy obraz tekstury:
-		bitmapData = LoadBitmapFile("Bitmapy\\checker.bmp", &bitmapInfoHeader);
+		bitmapData = LoadBitmapFile("Bitmapy\\ROCK.bmp", &bitmapInfoHeader);
 
 		glBindTexture(GL_TEXTURE_2D, texture[0]);       // aktywuje obiekt tekstury
 
@@ -1483,7 +1558,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 			free(bitmapData);
 
 		// �aduje drugi obraz tekstury:
-		bitmapData = LoadBitmapFile("Bitmapy\\crate.bmp", &bitmapInfoHeader);
+		bitmapData = LoadBitmapFile("Bitmapy\\factory2.bmp", &bitmapInfoHeader);
 		glBindTexture(GL_TEXTURE_2D, texture[1]);       // aktywuje obiekt tekstury
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
