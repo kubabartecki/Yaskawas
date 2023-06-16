@@ -1,4 +1,4 @@
 # Yaskawas
 Robots in Open GL
 
-![Imgur]([https://imgur.com/a/iGhkmQF)
+![Imgur](https://i.imgur.com/wZUHfm9.png)
