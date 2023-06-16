@@ -126,7 +126,7 @@ void calcNormal(float v[3][3], float out[3])
 // Change viewing volume and viewport.  Called when window is resized
 void ChangeSize(GLsizei w, GLsizei h)
 {
-	GLfloat nRange = 500.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	GLfloat nRange = 450.0f; // extendsssss area that u can observe!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	GLfloat fAspect;
 	// Prevent a divide by zero
 	if (h == 0)
@@ -163,6 +163,9 @@ void ChangeSize(GLsizei w, GLsizei h)
 // This function does any needed initialization on the rendering
 // context.  Here it sets up and initializes the lighting for
 // the scene.
+
+// flag to blinking second light
+int SecondLight = 1;
 void SetupRC()
 {
 	// Light values and coordinates
@@ -171,6 +174,26 @@ void SetupRC()
 	GLfloat  specular[] = { 1.0f, 1.0f, 1.0f, 1.0f};
 	GLfloat	 lightPos[] = { 0.0f, 150.0f, 150.0f, 1.0f };
 	GLfloat  specref[] =  { 1.0f, 1.0f, 1.0f, 1.0f };
+
+		// second broken light bulb
+		GLfloat  ambientLight2[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+		GLfloat  diffuseLight2[] = { 0.7f, 0.7f, 0.7f, 1.0f };
+		GLfloat  specular2[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		GLfloat	 lightPos2[] = { 0.0f, 150.0f, -30.0f, 1.0f };
+		GLfloat  specref2[4];
+		if (SecondLight) {
+			specref2[0] = 1.0f;
+			specref2[1] = 1.0f;
+			specref2[2] = 0.0f;
+			specref2[3] = 1.0f;
+
+		}
+		else {
+			specref2[0] = 0.0f;
+			specref2[1] = 0.0f;
+			specref2[2] = 0.0f;
+			specref2[3] = 0.0f;
+		}
 
 
 	glEnable(GL_DEPTH_TEST);	// Hidden surface removal
@@ -185,7 +208,18 @@ void SetupRC()
 								glLightfv(GL_LIGHT0,GL_DIFFUSE,diffuseLight);
 								glLightfv(GL_LIGHT0,GL_SPECULAR,specular);
 								glLightfv(GL_LIGHT0,GL_POSITION,lightPos);
+
+									// second
+								
+									glLightfv(GL_LIGHT1, GL_AMBIENT, ambientLight2);
+									glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuseLight2);
+									glLightfv(GL_LIGHT1, GL_SPECULAR, specular2);
+									glLightfv(GL_LIGHT1, GL_POSITION, lightPos2);
+								
+								
+									
 								glEnable(GL_LIGHT0);
+								//glEnable(GL_LIGHT1);
 
 								// Enable color tracking
 								glEnable(GL_COLOR_MATERIAL);
@@ -196,6 +230,13 @@ void SetupRC()
 								// All materials hereafter have full specular reflectivity
 								// with a high shine
 								glMaterialfv(GL_FRONT, GL_SPECULAR,specref);
+
+									// second
+								
+									glMaterialfv(GL_FRONT, GL_SPECULAR, specref2);
+								
+									
+
 								glMateriali(GL_FRONT,GL_SHININESS,128);
 
 
@@ -555,6 +596,130 @@ void ramie(double r1, double r2, double h, double d) {
 
 }
 
+
+void ramie_caption(double r1, double r2, double h, double d) {
+	double angle, x, y;
+
+	// 1 polowa walca ----------------------------
+	//--------------------------------------------
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3d(0.0, 0.0, -1.0);
+	glVertex3d(0.0f, 0.0f, 0.0f);
+	for (angle = GL_PI; angle <= (2.0f * GL_PI); angle += (GL_PI / 16.0f))
+	{
+		x = r1 * sin(angle);
+		y = r1 * cos(angle);
+		glVertex3d(x, y, 0.0);
+	}
+	glEnd();
+	glBegin(GL_QUAD_STRIP);
+	for (angle = GL_PI; angle <= (2.0f * GL_PI); angle += (GL_PI / 16.0f))
+	{
+		x = r1 * sin(angle);
+		y = r1 * cos(angle);
+		glNormal3d(sin(angle), cos(angle), 0.0);
+		glVertex3d(x, y, 0);
+		glVertex3d(x, y, h);
+	}
+	glEnd();
+
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3d(0.0, 0.0, 1.0);
+	glVertex3d(0.0f, 0.0f, h);
+	for (angle = 0.0f; angle >= (-1.0f * GL_PI); angle -= (GL_PI / 16.0f))
+	{
+		x = r1 * sin(angle);
+		y = r1 * cos(angle);
+		glVertex3d(x, y, h);
+	}
+	glEnd();
+
+	// 2 mniejsza polowa walca ----------------------------
+	//--------------------------------------------
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3d(0.0, 0.0, -1.0);
+	glVertex3d(d, 0.0f, 0.0f);
+	for (angle = 0.0f; angle <= (1.0f * GL_PI); angle += (GL_PI / 16.0f))
+	{
+		x = r2 * sin(angle);
+		y = r2 * cos(angle);
+		glVertex3d(x + d, y, 0.0);
+	}
+	glEnd();
+	glBegin(GL_QUAD_STRIP);
+	for (angle = 0.0f; angle <= GL_PI; angle += (GL_PI / 16.0f))
+	{
+		x = r2 * sin(angle);
+		y = r2 * cos(angle);
+		glNormal3d(sin(angle), cos(angle), 0.0);
+		glVertex3d(x + d, y, 0);
+		glVertex3d(x + d, y, h);
+	}
+	glEnd();
+
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3d(0.0, 0.0, 1.0);
+	glVertex3d(d, 0.0f, h);
+	for (angle = GL_PI; angle >= -0.01f; angle -= (GL_PI / 16.0f))
+	{
+		x = r2 * sin(angle);
+		y = r2 * cos(angle);
+		glVertex3d(x + d, y, h);
+	}
+	glEnd();
+
+	//connection walls
+	float norm[3];
+	float v[3][3] = {
+		{0, -r1, 0},
+		{d, -r2, 0},
+		{d, -r2, h}
+	};
+
+	calcNormal(v, norm);
+	glBegin(GL_QUADS);
+
+
+	glNormal3d(norm[0], norm[1], norm[2]);
+	glVertex3d(0, -r1, 0);
+	glVertex3d(d, -r2, 0);
+	glVertex3d(d, -r2, h);
+	glVertex3d(0, -r1, h);
+
+	glNormal3d(0.0f, 0.0f, 1.0f);
+	glVertex3d(0, -r1, h);
+	glVertex3d(d, -r2, h);
+	glVertex3d(d, r2, h);
+	glVertex3d(0, r1, h);
+
+	float v2[3][3] = {
+		{0, r1, h},
+		{d, r2, h},
+		{d, r2, 0}
+	};
+	glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, texture[1]);
+		glBegin(GL_QUADS);
+		calcNormal(v2, norm);
+		glNormal3d(norm[0], norm[1], norm[2]);
+
+		glTexCoord2d(1.0, 1.0); glVertex3d(0, r1, h);
+		glTexCoord2d(0.0, 1.0); glVertex3d(d, r2, h);
+		glTexCoord2d(0.0, 0.0); glVertex3d(d, r2, 0);
+		glTexCoord2d(1.0, 0.0); glVertex3d(0, r1, 0);
+		glEnd();
+	glDisable(GL_TEXTURE_2D); // Wy��cz teksturowanie
+	
+	
+	glNormal3d(0.0f, 0.0f, -1.0f);
+	glVertex3d(0, r1, 0);
+	glVertex3d(d, r2, 0);
+	glVertex3d(d, -r2, 0);
+	glVertex3d(0, -r1, 0);
+	glEnd();
+
+}
+
 int base(int x, int y, int z, int y2) {
 	prostopadloscian(x, y, z);
 
@@ -564,7 +729,7 @@ int base(int x, int y, int z, int y2) {
 	float z2 = z - front;
 	float move_z = (z - z2) / 2.0f;
 	glTranslated(0, y, -move_z);
-	prostopadloscian(x2, y2, z2); //TODO? moze jakies wciecie
+	prostopadloscian(x2, y2, z2);
 
 	glTranslated(0, 0, z2 / 2);
 	glRotated(-90, 1, 0, 0);
@@ -644,7 +809,7 @@ void scara(int x_base, int z_base, float cube_side) {
 	// top on 2 arm
 	glColor3d(0.2, 0.6, 0.9); // light blue
 	float y4 = y3 * 1.5f;
-	ramie(radius1, radius2, y4, d2);
+	ramie_caption(radius1, radius2, y4, d2);
 	glTranslated(0, 0, y4);
 	float y5 = y4 + y3;
 	glRotated(-90, 0, 0, 1);
@@ -944,15 +1109,16 @@ void factory_floor(float floor_x, float floor_z){
 
 	floor_x /= 2.0f;
 	floor_z /= 2.0f;
-	float floor_y = -5.0f;
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glBegin(GL_QUADS);
-	glNormal3d(0, 1, 0);
-	glTexCoord2d(1.0, 1.0); glVertex3d(floor_x, floor_y, floor_z);
-	glTexCoord2d(0.0, 1.0); glVertex3d(floor_x, floor_y, -floor_z);
-	glTexCoord2d(0.0, 0.0); glVertex3d(-floor_x, floor_y, -floor_z);
-	glTexCoord2d(1.0, 0.0); glVertex3d(-floor_x, floor_y, floor_z);
-	glEnd();
+	float floor_y = 0.0f;
+	glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		glBegin(GL_QUADS);
+		glNormal3d(0, 1, 0);
+		glTexCoord2d(1.0, 1.0); glVertex3d(floor_x, floor_y, floor_z);
+		glTexCoord2d(0.0, 1.0); glVertex3d(floor_x, floor_y, -floor_z);
+		glTexCoord2d(0.0, 0.0); glVertex3d(-floor_x, floor_y, -floor_z);
+		glTexCoord2d(1.0, 0.0); glVertex3d(-floor_x, floor_y, floor_z);
+		glEnd();
 
 	glDisable(GL_TEXTURE_2D); // Wy��cz teksturowanie
 }
@@ -963,7 +1129,7 @@ void factory_walls(float wall_x, float wall_y, float wall_z){
 	wall_x /= 2.0f;
 	wall_z /= 2.0f;
 	float floor_y = -5.0f;
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	/* glBegin(GL_QUADS);
 	glNormal3d(0, -1, 0);
 	glTexCoord2d(1.0, 1.0); glVertex3d(wall_x, wall_y, wall_z);
@@ -999,10 +1165,10 @@ void factory_walls(float wall_x, float wall_y, float wall_z){
 
 	glBegin(GL_QUADS); // left
 	glNormal3d(1, 0, 0);
-	glTexCoord2d(1.0, 1.0); glVertex3d(-wall_x, wall_y, wall_z);
-	glTexCoord2d(0.0, 1.0); glVertex3d(-wall_x, wall_y, -wall_z);
-	glTexCoord2d(0.0, 0.0); glVertex3d(-wall_x, 0, -wall_z);
-	glTexCoord2d(1.0, 0.0); glVertex3d(-wall_x, 0, wall_z);
+	glTexCoord2d(1.0, 1.0); glVertex3d(-wall_x, wall_y, -wall_z);
+	glTexCoord2d(0.0, 1.0); glVertex3d(-wall_x, wall_y, wall_z);
+	glTexCoord2d(0.0, 0.0); glVertex3d(-wall_x, 0, wall_z);
+	glTexCoord2d(1.0, 0.0); glVertex3d(-wall_x, 0, -wall_z);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D); // Wy��cz teksturowanie
@@ -1077,12 +1243,13 @@ unsigned char *LoadBitmapFile(char *filename, BITMAPINFOHEADER *bitmapInfoHeader
 
 float conveyor_len = 200.0f;
 int cube_in_box = 0;
-int MAX_CUBES_IN_BOX = 1;
+int MAX_CUBES_IN_BOX = 2;
 int ClosingBox = 0;
 int ClosedBox = 0;
 // Called to draw scene
 void RenderScene(void)
-{
+{	
+	SetupRC(); //dodane
 	//float normal[3];	// Storeage for calculated surface normal
 
 	// Clear the window with current clearing color
@@ -1105,10 +1272,10 @@ void RenderScene(void)
 
 	//Wyrysowanie prostokata:
 	//glRectd(-10.0, -10.0, 20.0, 20.0);
-	float floor_x = 1000.0f, floor_z = 1000.0f;
+	float floor_x = 700.0f, floor_z = 700.0f;
 	factory_floor(floor_x, floor_z);
 	
-	float wall_x = 1000.0f, wall_y = 250.0f, wall_z = 1000.0f;
+	float wall_x = 700.0f, wall_y = 250.0f, wall_z = 700.0f;
 	factory_walls(wall_x, wall_y, wall_z);
 
 	float conveyor_wid = 50.0f;
@@ -1394,6 +1561,12 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 	float cobot_dist_3t = 10.0f * (COBOT_TIMER_RATIO * 6.0f);
 	float cobot_dist_3y = 45.0f * (COBOT_TIMER_RATIO * 6.0f);
 
+	// second light
+	float light_time = 0.0f;
+	float LIGHT_TIME1 = 0.5f; // x3
+	float LIGHT_TIME2 = 1.0f; // x1
+	float LIGHT_TIME3 = 1.3f; // x1
+
 	switch (message)
 	{
 	case WM_TIMER:
@@ -1458,11 +1631,8 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 				if (cobot_time >= COBOT_TIME) {
 					cobot_time = 0.0f;
 					Cobot = 0;
-				}
 
-				else if (cobot_time >= COBOT_TIME) {
-				
-
+					
 				}
 				else if (cobot_time >= COBOT_TIME / 2.0f) {		// picked box
 					if (!ClosedBox) {
@@ -1474,6 +1644,17 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 					if (!PickedBox) {
 						PickedBox = 1;
 					}
+
+					// delete 2 lines below if you want to add next cobot moves
+					Cobot = 0;
+					cobot_time = 0.0f;
+
+					cobot_rot1 = 0.0f;
+					cobot_rot2 = 0.0f;
+					cobot_rot3 = 0.0f;
+					cobot_rot4 = 0.0f;
+					cobot_rot5 = 0.0f;
+					cobot_rot6 = 0.0f;
 					
 				}
 				else if (cobot_time >= COBOT_TIME / 3.0f) {		// above scara
@@ -1503,9 +1684,6 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 				}
 			}
 			
-			
-			
-			
 
 			if (Scara) {
 				cube_move += (conveyor_len / 4.0f * CONV_TIMER_RATIO); // * 50ms
@@ -1515,6 +1693,46 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 			if (Cobot) {
 				cobot_time += (float)SCARA_ELAPSE / 1000.0f;
 			}
+
+
+			//second light  !!! todo second light do not blink
+			if (light_time < LIGHT_TIME1) {
+				SecondLight = 1;
+			}
+			else if (light_time < 2.0f * LIGHT_TIME1) {
+				SecondLight = 0;
+			}
+			else if (light_time < 3.0f * LIGHT_TIME1) {
+				SecondLight = 1;
+			}
+			else if (light_time < 4.0f * LIGHT_TIME1) {
+				SecondLight = 0;
+			}
+			else if (light_time < 5.0f * LIGHT_TIME1) {
+				SecondLight = 1;
+			}
+			else if (light_time < 6.0f * LIGHT_TIME1) {
+				SecondLight = 0;
+			}
+			else if (light_time < 6.0f * LIGHT_TIME1 + LIGHT_TIME2) {
+				SecondLight = 1;
+			}
+			else if (light_time < 6.0f * LIGHT_TIME1 + 2.0f * LIGHT_TIME2) {
+				SecondLight = 0;
+			}
+			else if (light_time < 6.0f * LIGHT_TIME1 + 2.0f * LIGHT_TIME2 + LIGHT_TIME3) {
+				SecondLight = 1;
+			}
+			else if (light_time < 6.0f * LIGHT_TIME1 + 2.0f * LIGHT_TIME2 + 2.0f * LIGHT_TIME3) {
+				SecondLight = 0;
+			}
+			else {
+				light_time = 0.0f;
+			}
+
+			// why is it always 0?
+			light_time += (float)SCARA_ELAPSE / 1000.0f;
+
 
 			InvalidateRect(hWnd, NULL, FALSE);
 		}
@@ -1558,7 +1776,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 			free(bitmapData);
 
 		// �aduje drugi obraz tekstury:
-		bitmapData = LoadBitmapFile("Bitmapy\\factory2.bmp", &bitmapInfoHeader);
+		bitmapData = LoadBitmapFile("Bitmapy\\SKY.bmp", &bitmapInfoHeader);
 		glBindTexture(GL_TEXTURE_2D, texture[1]);       // aktywuje obiekt tekstury
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1573,6 +1791,7 @@ LRESULT CALLBACK WndProc(HWND    hWnd,
 
 		if (bitmapData)
 			free(bitmapData);
+			
 
 		// ustalenie sposobu mieszania tekstury z t�em
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
